@@ -1,0 +1,95 @@
+# Spectrum tokenization: controls which peaks are selected and filtered when
+# converting a spectrum into model input.
+spectrum_tokenizer:
+  n_top_peaks: 300
+  min_mz: 50.0
+  max_mz: 4500.0
+  min_intensity: 0.01
+  remove_precursor_tol: 2.0
+
+# Data augmentation settings: perform random perturbations to spectra during
+# training to improve robustness.
+aug:
+  enabled: true
+  prob: 0.5
+  removal_rate: 0.2
+  removal_intensity_threshold: 0.3
+  perturbation_rate: 0.15
+
+# Peptide tokenizer options: control token generation and vocabulary.
+peptide_tokenizer:
+  reverse: true
+  residues: "massivekb"
+
+# Model type selection: choose 'base' (standard CLIP) or 'rope' (RoPE variant). We just used base model to train CLIP.
+choose: "base"
+
+# Spectrum encoder network configuration
+spectrum_encoder:
+  embed_dim: 512
+  n_heads: 8
+  n_layers: 9
+  dropout: 0.18
+  feedforward: 1024
+
+# Peptide encoder network configuration (should match training and inference)
+peptide_encoder:
+  embed_dim: 512
+  n_heads: 8
+  n_layers: 9
+  dropout: 0.18
+  feedforward: 1024
+# ========================================= Trainer settings ========================================
+# Optimizer hyperparameters
+# learning_rate: learning rate (use floating point format)
+# weight_decay: weight decay
+optimizer:
+  learning_rate: 1.0e-4 # must be a float otherwise some parsers may treat it as string
+  weight_decay: 1.0e-4
+
+# Learning rate scheduler settings (e.g. number of cosine cycles)
+scheduler:
+  num_cycles: 1
+  lr_decay_factor: 1.0
+
+# CLIP loss related parameters
+clip_loss:
+  temperature: 0.05
+
+# Training control parameters
+trainer:
+  max_epochs: 10
+  warmup_epochs: 0.2
+  grad_norm_clip: 1.5
+  model_save_folder: "/data2/xht/de-novo/data/Final/clip_model/"
+  validation_steps: 50000
+  save_top_k: 5
+  show_progress_bar: false
+  n_log: 1
+  summarywriter: "/data2/xht/de-novo/data/output/Final/clip"
+  is_grad_scale: false
+  load_mode: "TFS"
+# Load_mode:
+#   "TFS": Basic Setup. Train model from scratch.
+#   "RESUME": Restores the model weights, along with the optimizer and scheduler states.
+#   "WARM_START": Restores only the model weights. This is equivalent to starting a new training session (from epoch 0) using pre-trained weights.
+
+# Data paths and dataloader parameters
+trainer_data:
+  train_path: "/data2/xht/denovo_data/massivekb_hdf5/train_massive.hdf5"
+  valid_path: "/data2/xht/denovo_data/massivekb_hdf5/valid_massive.hdf5"
+  batch_size: 200
+  data_loader_workers: 8
+
+# ======================================== Predictor settings ======================================
+# Prediction / inference settings
+predictor:
+  show_progress_bar: true
+predictor_data:
+  test_path: "/data1/de-novo/data/massive/test_massive.hdf5"
+  batch_size: 512
+  data_loader_workers: 4
+
+# ======================================= General settings ========================================
+# Random seed for reproducibility
+random_seed: 4545

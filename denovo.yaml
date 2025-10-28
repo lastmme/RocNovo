@@ -1,0 +1,76 @@
+# Path to the CLIP config used for training and prediction. The CLIP config
+# includes spectrum_tokenizer, peptide_tokenizer and encoder settings.
+clip_config_path: "/data2/xht/RocNovo/clip.yaml"
+# Optional: path to a pretrained CLIP checkpoint. If empty, weights will be
+# initialized from denovo checkpoint (or trained from scratch).
+clip_checkpoint_path:
+
+# =============================== Decoder settings (DeNovo specific) ===============================
+# DecoderModel.choose: name of the decoder implementation. See DECODER_CLASSES
+# in the code for available classes (We just give one: BiDirectRopeClipModel).
+DecoderModel:
+  choose: "BiDirectRopeClipModel"
+  BiDirectRopeClipModel:
+    model_dim: 512
+    n_layers: 9
+    n_heads: 8
+    dim_feedforward: 1024
+    dropout: 0.18
+
+# ========================================= Optimizer & scheduler ==================================
+optimizer:
+  learning_rate: 3.0e-4
+  weight_decay: 1.0e-4
+
+scheduler:
+  num_cycles: 1
+  lr_decay_factor: 10.0
+
+# Decoder loss related settings
+decoder_loss:
+  label_smoothing: 0.05
+
+# ========================================= Training control ==================================
+# Trainer settings control epochs, saving, warmup, gradient clipping, etc.
+trainer:
+  max_epochs: 10
+  warmup_epochs: 0.5
+  grad_norm_clip: 1.5
+  model_save_folder: "/data2/xht/de-novo/data/Final/denovo_model/noise"
+  validation_steps: 50000
+  save_top_k: 5
+  show_progress_bar: false
+  n_log: 1
+  summarywriter: "/data2/xht/de-novo/data/output/Final/denovo"
+  is_grad_scale: false
+  load_mode: "TFS" 
+# Load_mode:
+#   "TFS": Basic Setup. Train model from scratch.
+#   "RESUME": Restores the model weights, along with the optimizer and scheduler states.
+#   "WARM_START": Restores only the model weights. This is equivalent to starting a new training session (from epoch 0) using pre-trained weights.
+
+# Training dataset paths and dataloader settings
+trainer_data:
+  train_path: "/data2/xht/denovo_data/massivekb_hdf5/train_massive.hdf5"
+  valid_path: "/data2/xht/denovo_data/massivekb_hdf5/valid_massive.hdf5"
+  batch_size: 64
+  data_loader_workers: 8
+
+# ========================================= Prediction settings ==================================
+# predictor.beam_search: beam search parameters used during decoding
+predictor:
+  show_progress_bar: true
+  beam_search:
+    beam_size: 10       
+    max_len: 100        
+    mass_tolerance: 50   
+    max_isotope: 1       
+    min_peptide_len: 6   
+
+predictor_data:
+  test_path: "/data2/xht/denovo_data/massivekb_hdf5/test_massive.hdf5"
+  batch_size: 800
+  data_loader_workers: 4
+
+# Global random seed for reproducibility
+random_seed: 1256
