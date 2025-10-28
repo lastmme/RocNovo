@@ -110,3 +110,21 @@ precursor_mz,precursor_charge,seq1_score,seq1,seq2_score,seq2,pred_mass,pred_sco
 ```
 where `seq1`/`seq2` are the predicted sequences from c-termini and n-termini, and `pred_peptide` is the final peptide selected from seq1 and seq2. `idx` is the index of the spectrum in the input HDF5 file.
 
+## 6. Tips
+
+- DDP (distributed data parallel) note — master address/port. This project sets the DDP master address and port in `rocnovo/common/ddp.py`:
+
+  ```python
+  def ddp_setup(rank: int, world_size: int):
+      os.environ["MASTER_ADDR"] = "localhost"
+      os.environ["MASTER_PORT"] = "12355"
+      # rank identifies the logical GPU index
+      init_process_group(backend="nccl", rank=rank, world_size=world_size)
+  ```
+
+  If port 12355 is already in use on your machine, distributed initialization may fail due to a port conflict. You can resolve this by editing `rocnovo/common/ddp.py` and changing "12355" to an unused port (for example "12356").
+
+
+
+
+
