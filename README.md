@@ -1,130 +1,118 @@
-# RocNovo — Quick start (Linux + conda)
+# RocNovo
 
-This README describes how to set up a conda-based environment, prepare data(MGF -> HDF5), train CLIP (Stage One) and DeNovo (Stage Two) models, and run predictions. 
+Official implementation of **RocNovo: Bidirectional Peptide Sequencing with Contrastive Global Priors and Rotational m/z Embeddings** (IEEE BIBM 2026, B2354).
 
+**Hongtao Xu, Peng Xiong, and Haoran Zheng** · University of Science and Technology of China
 
-## 1. Create and activate a conda environment
+**Version: 1.0.0**
 
-Recommended: create a conda environment named `rocnovo` with Python 3.11:
+RocNovo predicts peptide sequences from tandem mass spectra using contrastive spectrum–peptide pretraining, continuous-m/z rotary position embeddings, and bidirectional autoregressive decoding.
+
+## Related repositories
+
+| Repository | Link |
+| --- | --- |
+| Source code and benchmark summaries | [GitHub: lastmme/RocNovo](https://github.com/lastmme/RocNovo) |
+| Pretrained models | [ModelScope: lastmme/RocNovo](https://modelscope.cn/models/lastmme/RocNovo) |
+| Evaluation data and scripts | [ModelScope: lastmme/RocNovo-evaluation](https://modelscope.cn/datasets/lastmme/RocNovo-evaluation) |
+
+Each repository provides its own usage instructions.
+
+## Documentation and results
+
+- [MGF to HDF5 conversion](docs/data_conversion.md)
+- [Datasets and download organization](docs/datasets.md)
+- [Pretrained checkpoints and paper mapping](docs/models.md)
+- [Benchmark results and downloadable summaries](docs/results.md)
+- [Evaluation commands and metric definitions](docs/evaluation.md)
+- [Configuration, training modes, and DDP notes](docs/configuration.md)
+
+### Benchmark overview
+
+| Training / evaluation | AA Precision | Peptide Recall |
+| --- | --- | --- |
+| NovoBench Seven-species | 0.570 | 0.377 |
+| NovoBench Nine-species | 0.821 | 0.640 |
+| NovoBench HC-PT | 0.676 | 0.516 |
+| MassIVE-KB / Nine-species V1 | 0.829 | 0.656 |
+| MassIVE-KB / Nine-species V2 (filtered) | 0.924 | 0.803 |
+
+Values are rounded fractions; V1/V2 averages are across species. Full species-level metrics, PTM results, ablations, and source files are available in the [results guide](docs/results.md).
+
+## Installation
+
+Use Linux with an NVIDIA GPU and a compatible CUDA/PyTorch environment for the GPU training and inference implementation. The distributed training code uses NCCL.
 
 ```bash
+git clone https://github.com/lastmme/RocNovo.git
+cd RocNovo
 conda create -n rocnovo python=3.11
 conda activate rocnovo
-```
-Install dependencies from `requirements.txt`:
-```bash
 pip install -r requirements.txt
 ```
 
-## 2. Data preparation — convert MGF to HDF5
+## Data
 
-The repository contains a helper in `rocnovo/data/prepare_data.py`. The main convenience function is `MgfToHdf5(mgf_path, hdf5_path, **kwargs)`.
-
-Example: convert a single MGF to HDF5 (from project root):
+Use our [ModelScope test inputs](https://modelscope.cn/datasets/lastmme/RocNovo-evaluation), or convert your own MGF files:
 
 ```python
 from rocnovo.data.prepare_data import MgfToHdf5
-MgfToHdf5('/data/raw/example.mgf', '/data/hdf5/example.hdf5', ms_level=2, annotated=False) 
-# Convert MS2 spectra, unannotated
-# or annotated=True if peptide labels are present. For training data, this is necessary.
-# MgfToHdf5('/data/raw/example_annotated.mgf', '/data/hdf5/example_annotated.hdf5', ms_level=2, annotated=True)
+MgfToHdf5("example.mgf", "example.hdf5", ms_level=2, annotated=True)
 ```
 
-- Place HDF5 paths in your YAML config under `trainer_data` / `predictor_data`.
+Use `annotated=True` for training/evaluation and `False` for unannotated inference. The function copies `SEQ` strings without converting modification notation and overwrites an existing output. See the [conversion guide](docs/data_conversion.md) for accepted inputs, parameters, output fields, and alignment checks.
 
-## 3. Configuration files
+## Inference
 
-Primary config files (root): `clip.yaml` and `denovo.yaml`. 
-These YAML files contain inline comments describing each parameter.
+Download the matching CLIP/de novo checkpoints and configuration pair. Set `clip_config_path`, `clip_checkpoint_path`, and `predictor_data.test_path` to your local files. Paths in YAML are resolved from the working directory. The released examples use beam size **10** and precursor tolerance **50 ppm**.
 
-Before training, update:
-```yaml
-trainer:
-  max_epochs:  # total epochs to train
-  warmup_epochs:  # fraction of epochs for LR warmup
-  grad_norm_clip:  # gradient clipping norm
-  model_save_folder: # directory to save model checkpoints
-  validation_steps:  # validation frequency (steps)
-  save_top_k:  # number of best checkpoints to keep
-  show_progress_bar: # whether to show progress bar
-  summarywriter: # TensorBoard log directory
-  load_mode: # model loading mode. Options: "TFS", "RESUME", "WARM_START" 
-# If training from scratch, set to "TFS".
-#   "TFS": Basic Setup. Train model from scratch.
-# If resuming interrupted training, set to "RESUME" or "WARM_START".
-#   "RESUME": Restores the model weights, along with the optimizer and scheduler states.
-#   "WARM_START": Restores only the model weights. This is equivalent to starting a new training session (from epoch 0) using pre-trained weights.
-
-
-trainer_data:
-  train_path: # path to training HDF5 file
-  valid_path: # path to validation HDF5 file
-  batch_size: # batch size for training
-  data_loader_workers: # number of data loader workers
-```
-
-if needed, adapt model sizes, learning rates, etc. in the YAML.
-
-Before inference, set:
-```yaml
-predictor_data:
-  test_path: # path to test HDF5 file
-  batch_size: # batch size for inference
-  data_loader_workers: # number of data loader workers
-
-# only needed for denovo prediction:
-predictor:
-  show_progress_bar: # whether to show progress bar
-  beam_search:
-    beam_size: # beam size for decoding
-    max_len: # maximum peptide length        
-    mass_tolerance: # mass tolerance (Da)
-    max_isotope: # maximum isotope correction       
-    min_peptide_len: # minimum peptide length
-```
-
-
-## 4. Train and predict
-From the project root, run:
-
-Train CLIP (Stage One):
 ```bash
-python -m rocnovo.rocnovo clip train --config clip.yaml
-``` 
-
-Train DeNovo (Stage Two):
-```bash
-python -m rocnovo.rocnovo denovo train --config denovo.yaml 
+python -m rocnovo.rocnovo denovo predict --config path/to/denovo.yaml --checkpoint path/to/denovo.ckpt --output predictions.csv
 ```
 
-Predict with DeNovo model:
-```bash
-python -m rocnovo.rocnovo denovo predict --config denovo.yaml --checkpoint /path/denovo.ckpt --output out_denovo.csv
-```
+Do not mix CLIP configurations or checkpoints between training settings. De novo checkpoints include the frozen CLIP model; the standalone CLIP checkpoint is also provided for Stage One use.
 
-## 5. Results
+Prediction CSV columns:
 
-Predictions are written to CSV files specified by `--output`. Each row contains :
-```python 
+```text
 precursor_mz,precursor_charge,seq1_score,seq1,seq2_score,seq2,pred_mass,pred_score,pred_peptide,idx
 ```
-where `seq1`/`seq2` are the predicted sequences from c-termini and n-termini, and `pred_peptide` is the final peptide selected from seq1 and seq2. `idx` is the index of the spectrum in the input HDF5 file.
 
-## 6. Tips
+`pred_peptide` is the selected directional output; `idx` is the original zero-based input sample index. The direction of `seq1` and `seq2` follows the peptide tokenizer configuration. Keep these indices when applying evaluation exclusions.
 
-- DDP (distributed data parallel) note — master address/port. This project sets the DDP master address and port in `rocnovo/common/ddp.py`:
+## Training
 
-  ```python
-  def ddp_setup(rank: int, world_size: int):
-      os.environ["MASTER_ADDR"] = "localhost"
-      os.environ["MASTER_PORT"] = "12355"
-      # rank identifies the logical GPU index
-      init_process_group(backend="nccl", rank=rank, world_size=world_size)
-  ```
+Set training/validation HDF5 paths and output directories in the matching YAML files.
 
-  If port 12355 is already in use on your machine, distributed initialization may fail due to a port conflict. You can resolve this by editing `rocnovo/common/ddp.py` and changing "12355" to an unused port (for example "12356").
+```bash
+python -m rocnovo.rocnovo clip train --config clip.yaml
+python -m rocnovo.rocnovo denovo train --config denovo.yaml
+```
 
+Train Stage One first, then set the trained `clip_checkpoint_path` before Stage Two. Stage Two freezes the contrastive model and learns the generation modules. Set `trainer.load_mode` to `TFS` for a fresh run, `RESUME` to restore optimizer/scheduler state, or `WARM_START` to initialize model weights only. Preserve the checkpoint's architecture and tokenizer settings when loading it.
 
+## Configuration and runtime notes
 
+- Match checkpoint architecture/tokenizer settings and use dataset-specific YAML files.
+- Set `trainer.load_mode` explicitly: `TFS`, `RESUME`, or `WARM_START`.
+- `trainer.warmup_epochs` is an epoch duration, not a fraction of the total run.
+- NCCL training requires a suitable Linux/CUDA setup. The default DDP port is `12355`; change it if occupied.
+- Beam-search mass tolerance is specified in **ppm**.
 
+See the [full configuration guide](docs/configuration.md) for the original configuration fields and runtime details.
 
+## Evaluation
+
+Evaluation instructions and scripts are provided in the ModelScope dataset repository. [Results and downloadable summaries](docs/results.md) are maintained here with the source code.
+
+## License
+
+Our original code, model weights, configurations, and documentation are released under [Apache-2.0](LICENSE). This does not relicense third-party code or benchmark data. See [license scope](LICENSE_SCOPE.md) for the distinction and source attribution.
+
+## Citation and contact
+
+Please cite our BIBM 2026 paper when using RocNovo:
+
+> Hongtao Xu, Peng Xiong, and Haoran Zheng. RocNovo: Bidirectional Peptide Sequencing with Contrastive Global Priors and Rotational m/z Embeddings. IEEE BIBM, 2026.
+
+Questions and reproducibility issues: https://github.com/lastmme/RocNovo/issues

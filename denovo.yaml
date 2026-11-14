@@ -1,6 +1,6 @@
 # Path to the CLIP config used for training and prediction. The CLIP config
 # includes spectrum_tokenizer, peptide_tokenizer and encoder settings.
-clip_config_path: "/data2/xht/RocNovo/clip.yaml"
+clip_config_path: "./clip.yaml"
 # Optional: path to a pretrained CLIP checkpoint. If empty, weights will be
 # initialized from denovo checkpoint (or trained from scratch).
 clip_checkpoint_path:
@@ -36,14 +36,14 @@ trainer:
   max_epochs: 10
   warmup_epochs: 0.5
   grad_norm_clip: 1.5
-  model_save_folder: "/data2/xht/de-novo/data/Final/denovo_model/noise"
+  model_save_folder: "./outputs/denovo/checkpoints"
   validation_steps: 50000
   save_top_k: 5
   show_progress_bar: false
   n_log: 1
-  summarywriter: "/data2/xht/de-novo/data/output/Final/denovo"
+  summarywriter: "./outputs/denovo/tensorboard"
   is_grad_scale: false
-  load_mode: "TFS" 
+  load_mode: "TFS"
 # Load_mode:
 #   "TFS": Basic Setup. Train model from scratch.
 #   "RESUME": Restores the model weights, along with the optimizer and scheduler states.
@@ -51,8 +51,8 @@ trainer:
 
 # Training dataset paths and dataloader settings
 trainer_data:
-  train_path: "/data2/xht/denovo_data/massivekb_hdf5/train_massive.hdf5"
-  valid_path: "/data2/xht/denovo_data/massivekb_hdf5/valid_massive.hdf5"
+  train_path: "./data/massivekb/train.hdf5"
+  valid_path: "./data/massivekb/valid.hdf5"
   batch_size: 64
   data_loader_workers: 8
 
@@ -61,14 +61,14 @@ trainer_data:
 predictor:
   show_progress_bar: true
   beam_search:
-    beam_size: 10       
-    max_len: 100        
-    mass_tolerance: 50   
-    max_isotope: 1       
-    min_peptide_len: 6   
+    beam_size: 10
+    max_len: 100
+    mass_tolerance: 50
+    max_isotope: 1
+    min_peptide_len: 6
 
 predictor_data:
-  test_path: "/data2/xht/denovo_data/massivekb_hdf5/test_massive.hdf5"
+  test_path: "./data/YOUR_TEST_FILE.hdf5"
   batch_size: 800
   data_loader_workers: 4
 

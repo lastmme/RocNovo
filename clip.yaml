@@ -61,12 +61,12 @@ trainer:
   max_epochs: 10
   warmup_epochs: 0.2
   grad_norm_clip: 1.5
-  model_save_folder: "/data2/xht/de-novo/data/Final/clip_model/"
+  model_save_folder: "./outputs/clip/checkpoints"
   validation_steps: 50000
   save_top_k: 5
   show_progress_bar: false
   n_log: 1
-  summarywriter: "/data2/xht/de-novo/data/output/Final/clip"
+  summarywriter: "./outputs/clip/tensorboard"
   is_grad_scale: false
   load_mode: "TFS"
 # Load_mode:
@@ -76,8 +76,8 @@ trainer:
 
 # Data paths and dataloader parameters
 trainer_data:
-  train_path: "/data2/xht/denovo_data/massivekb_hdf5/train_massive.hdf5"
-  valid_path: "/data2/xht/denovo_data/massivekb_hdf5/valid_massive.hdf5"
+  train_path: "./data/massivekb/train.hdf5"
+  valid_path: "./data/massivekb/valid.hdf5"
   batch_size: 200
   data_loader_workers: 8
 
@@ -86,7 +86,7 @@ trainer_data:
 predictor:
   show_progress_bar: true
 predictor_data:
-  test_path: "/data1/de-novo/data/massive/test_massive.hdf5"
+  test_path: "./data/YOUR_TEST_FILE.hdf5"
   batch_size: 512
   data_loader_workers: 4
 
