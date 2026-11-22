@@ -56,6 +56,9 @@ manifest = {}
 def save(fig, name, source):
     for ext in ['pdf', 'svg', 'png']:
         fig.savefig(OUT / f'{name}.{ext}', dpi=300, bbox_inches='tight', pad_inches=.16)
+        if ext == 'svg':
+            svg_path = OUT / f'{name}.{ext}'
+            svg_path.write_text('\n'.join(line.rstrip() for line in svg_path.read_text(encoding='utf-8').splitlines()) + '\n', encoding='utf-8')
     manifest[name] = source
     plt.close(fig)
 
