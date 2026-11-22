@@ -10,9 +10,7 @@ RocNovo predicts peptide sequences from tandem mass spectra using contrastive sp
 
 ## Model architecture
 
-![RocNovo model architecture](results/figures/model_architecture.png)
-
-The original architecture diagram shows contrastive pretraining (Stage One) and prompt-guided bidirectional sequencing (Stage Two). See the [result figures](docs/results.md#visual-results) for benchmark comparisons and component analysis.
+![RocNovo model architecture](docs/assets/model_architecture.png)
 
 ## Related repositories
 
