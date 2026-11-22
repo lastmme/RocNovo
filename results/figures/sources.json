@@ -1,0 +1,8 @@
+{
+  "fig02_novobench": "paper_tables.xlsx / Table1-novobench_performance / A3:M11",
+  "fig03_species_gains": "paper_tables.xlsx / Table2-9species-v1 / C1:L21; species-level differences, no averaging",
+  "fig04_ablation_beam": "paper_tables.xlsx / Table4-AblationStudy / A2:F7; Table5-BeamStudy / C11:H11, C21:H21",
+  "figS01_ptm": "paper_tables.xlsx / Table1-novobench_performance / A16:G23; ReNovo absent, omitted",
+  "figS02_datasets": "dataset_overview.xlsx / Sheet1 / C2:C15 and D6:E23",
+  "fig05_runtime": "speed_vs_casanovo.xlsx / Sheet1 / B1:K3; beam size 1–10 and seconds confirmed by user"
+}

@@ -79,7 +79,47 @@ All configurations use MassIVE-KB training and Nine-species V1 evaluation. The t
 | [Dataset overview](../results/dataset-overview/dataset_overview.xlsx) | Supplied dataset statistics |
 | [Timing workbook](../results/speed-vs-casanovo/speed_vs_casanovo.xlsx) | Casanovo/RocNovo measurements under columns 1–10 |
 
-The timing workbook alone does not specify units, hardware, or what columns 1–10 represent. Consult a documented measurement protocol before interpreting these numbers as throughput, latency, beam settings, or cross-model speedup. These auxiliary resources are separate from the main benchmark claims.
+The authors confirm that columns 1–10 are beam sizes and the recorded values are runtime in seconds. Hardware, batch size, timing scope, and repeated-run measurements are not supplied in the workbook. The runtime figure presents these recorded values and their ratios; it does not establish hardware-independent speedup. These auxiliary resources are separate from the main benchmark claims.
+
+## Visual results
+
+Figures use a consistent mist-blue, rose, and soft-teal palette. [Downloadable PDF/SVG/PNG files and reproduction instructions](../results/figures/README.md) accompany the source result workbooks. The plots visualize supplied summaries, not newly recomputed inference results.
+
+### NovoBench comparison
+
+![NovoBench model comparisons](../results/figures/fig02_novobench.png)
+
+Peptide recall, PR-AUC, and amino-acid precision across three NovoBench subsets. Values for comparison methods come from the paper table workbook.
+
+### Across-species differences
+
+![Species-level performance differences](../results/figures/fig03_species_gains.png)
+
+RocNovo minus each baseline, in percentage points. Negative cells are retained. V1 and filtered V2 are shown separately; their difference is not interpreted as an architectural improvement.
+
+### Ablation and beam size
+
+![Module ablations and beam-size response](../results/figures/fig04_ablation_beam.png)
+
+The five configurations are discrete ablations. Base already includes precursor-input and Pre-LN changes. Beam curves show arithmetic macro-averages across nine V1 species.
+
+### Runtime comparison
+
+![Runtime by beam size](../results/figures/fig05_runtime.png)
+
+Runtime in seconds for beam sizes 1–10, plus the recorded Casanovo/RocNovo runtime ratio. No repeat-run uncertainty is available.
+
+### PTM performance
+
+![PTM precision and recall](../results/figures/figS01_ptm.png)
+
+Each marker is an aggregate precision/recall operating point, not a complete PR curve. Missing ReNovo PTM values are omitted.
+
+### Dataset overview
+
+![Dataset scale and species composition](../results/figures/figS02_datasets.png)
+
+Counts follow the supplied overview and are not assumed to be evaluation-set denominators. Dataset scale uses a logarithmic axis; species composition uses within-dataset proportions.
 
 ## Reproduce evaluation
 

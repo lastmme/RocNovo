@@ -8,6 +8,12 @@ Official implementation of **RocNovo: Bidirectional Peptide Sequencing with Cont
 
 RocNovo predicts peptide sequences from tandem mass spectra using contrastive spectrum–peptide pretraining, continuous-m/z rotary position embeddings, and bidirectional autoregressive decoding.
 
+## Model architecture
+
+![RocNovo model architecture](results/figures/model_architecture.png)
+
+The original architecture diagram shows contrastive pretraining (Stage One) and prompt-guided bidirectional sequencing (Stage Two). See the [result figures](docs/results.md#visual-results) for benchmark comparisons and component analysis.
+
 ## Related repositories
 
 | Repository | Link |
